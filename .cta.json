@@ -1,23 +1,24 @@
 {
-  "projectName": "frontend",
+  "projectName": "tcc-academico-frontend",
   "mode": "file-router",
   "typescript": true,
-  "packageManager": "pnpm",
-  "includeExamples": false,
   "tailwind": true,
-  "addOnOptions": {},
-  "envVarValues": {},
+  "packageManager": "bun",
   "git": true,
+  "install": true,
+  "addOnOptions": {},
+  "includeExamples": true,
+  "envVarValues": {},
   "routerOnly": false,
   "version": 1,
-  "framework": "react-cra",
+  "framework": "react",
   "chosenAddOns": [
-    "biome",
-    "nitro",
-    "form",
-    "paraglide",
-    "shadcn",
     "table",
-    "tanstack-query"
+    "tanstack-query",
+    "form",
+    "store",
+    "nitro",
+    "paraglide",
+    "biome"
   ]
 }
