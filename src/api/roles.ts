@@ -27,9 +27,7 @@ export async function updateRole(
 	id: string,
 	data: UpdateRoleRequest,
 ): Promise<Role> {
-	console.log('updateRole data:', data) // Log dos dados
 	const response = await client.patch<Role>(`/roles/${id}`, data)
-	console.log('updateRole response:', response.data) // Log da resposta completa
 	return response.data
 }
 
@@ -47,9 +45,8 @@ export async function reassignRoleUsers(
 export async function assignRolePermissions(
 	roleId: string,
 	permissionIds: string[],
-): Promise<Role> {
-	const response = await client.patch<Role>(`/roles/${roleId}`, {
+): Promise<void> {
+	await client.put(`/roles/${roleId}/permissions`, {
 		permission_ids: permissionIds,
 	})
-	return response.data
 }

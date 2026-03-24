@@ -20,6 +20,14 @@ client.interceptors.request.use((config) => {
 	if (token) {
 		config.headers.Authorization = `Bearer ${token}`
 	}
+	// log request data for debugging
+	console.log('API Request:', {
+		url: config.url,
+		method: config.method,
+		data: config.data,
+		headers: config.headers,
+		params: config.params,
+	})
 	return config
 })
 

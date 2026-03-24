@@ -8,6 +8,7 @@ import { getMe } from '../../api/users'
 import { Button } from '../ui/button'
 import ThemeToggle from '../ThemeToggle'
 import LocaleSwitcher from '../LocaleSwitcher'
+import { m } from '@/paraglide/messages'
 import {
 	Sidebar,
 	SidebarContent,
@@ -39,7 +40,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
 
 	const displayName = me
 		? `${me.first_name} ${me.last_name}`.trim()
-		: (auth.userId ?? 'Usuário')
+		: (auth.userId ?? m.nav_user_fallback())
 
 	async function handleLogout() {
 		try {
@@ -53,9 +54,9 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
 	}
 
 	const navItems = [
-		{ to: '/users' as const, label: 'Usuários', icon: Users, visible: true },
-		{ to: '/roles' as const, label: 'Papéis', icon: Shield, visible: canReadRoles },
-		{ to: '/settings' as const, label: 'Configurações', icon: Settings, visible: true },
+		{ to: '/users' as const, label: m.nav_users(), icon: Users, visible: true },
+		{ to: '/roles' as const, label: m.nav_roles(), icon: Shield, visible: canReadRoles },
+		{ to: '/settings' as const, label: m.nav_settings(), icon: Settings, visible: true },
 	]
 
 	return (

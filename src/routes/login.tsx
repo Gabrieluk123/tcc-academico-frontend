@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 
 import { login } from '../api/auth'
 import { setAuth, useIsAuthenticated } from '../lib/auth-store'
+import { m } from '@/paraglide/messages'
 import { useAppForm } from '../hooks/app-form'
 import { loginRequestSchema } from '@/types/api'
 
@@ -40,9 +41,9 @@ function LoginPage() {
 		onError: (error: Error) => {
 			const msg = error.message.toLowerCase()
 			if (msg.includes('401') || msg.includes('credencial') || msg.includes('senha') || msg.includes('email') || msg.includes('invalid')) {
-				setErrorMessage('Email ou senha incorretos.')
+				setErrorMessage(m.login_error_credentials())
 			} else {
-				setErrorMessage('Erro inesperado, tente novamente.')
+				setErrorMessage(m.login_error_unexpected())
 			}
 		},
 	})
@@ -61,7 +62,7 @@ function LoginPage() {
 			<Card className="w-full max-w-sm">
 				<CardHeader className="text-center">
 					<CardTitle className="text-2xl">Acadêmico Dr Alto</CardTitle>
-					<CardDescription>Entre com suas credenciais para continuar</CardDescription>
+					<CardDescription>{m.login_subtitle()}</CardDescription>
 				</CardHeader>
 				<CardContent>
 					{errorMessage && (
@@ -78,15 +79,15 @@ function LoginPage() {
 						className="space-y-4"
 					>
 						<form.AppField name="email">
-							{(field) => <field.TextField label="Email" type="email" placeholder="seuemail@exemplo.com" />}
-						</form.AppField>
+						{(field) => <field.TextField label={m.common_email()} type="email" placeholder={m.login_email_placeholder()} />}
+					</form.AppField>
 
-						<form.AppField name="password">
-							{(field) => <field.TextField label="Senha" type="password" placeholder="••••••••" />}
-						</form.AppField>
+					<form.AppField name="password">
+						{(field) => <field.TextField label={m.login_password_label()} type="password" placeholder="••••••••" />}
+					</form.AppField>
 
-						<form.AppForm>
-							<form.SubmitButton label="Entrar" />
+					<form.AppForm>
+						<form.SubmitButton label={m.login_submit()} />
 						</form.AppForm>
 					</form>
 				</CardContent>

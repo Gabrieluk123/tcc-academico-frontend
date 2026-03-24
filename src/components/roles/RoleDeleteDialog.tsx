@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
+import { m } from '@/paraglide/messages'
 
 import type { Role } from '@/types/api'
 import { listUsers } from '@/api/users'
@@ -54,7 +55,7 @@ export function RoleDeleteDialog({ open, onOpenChange, role }: RoleDeleteDialogP
 	const deleteMutation = useMutation({
 		mutationFn: async () => {
 			if (hasUsers) {
-				if (!newRoleId) throw new Error('Selecione um perfil de destino.')
+				if (!newRoleId) throw new Error(m.role_delete_error_no_role())
 				await reassignRoleUsers(role.id, newRoleId)
 			}
 			await deleteRole(role.id)
@@ -62,7 +63,7 @@ export function RoleDeleteDialog({ open, onOpenChange, role }: RoleDeleteDialogP
 		onSuccess: () => {
 			queryClient.invalidateQueries({ queryKey: ['roles'] })
 			queryClient.invalidateQueries({ queryKey: ['users'] })
-			toast.success('Papel excluído.')
+			toast.success(m.role_delete_toast_success())
 			onOpenChange(false)
 		},
 		onError: (err: Error) => toast.error(err.message),
@@ -77,22 +78,22 @@ export function RoleDeleteDialog({ open, onOpenChange, role }: RoleDeleteDialogP
 		<Dialog open={open} onOpenChange={handleClose}>
 			<DialogContent className="sm:max-w-md">
 				<DialogHeader>
-					<DialogTitle>Excluir papel</DialogTitle>
+					<DialogTitle>{m.role_delete_title()}</DialogTitle>
 					<DialogDescription>
 						{checkingUsers
-							? 'Verificando usuários...'
+							? m.role_delete_checking()
 							: hasUsers
-								? `O papel "${role.name}" possui ${userCount} usuário(s). Escolha um perfil de destino antes de excluir.`
-								: `Tem certeza que deseja excluir o papel "${role.name}"? Esta ação não pode ser desfeita.`}
+								? m.role_delete_has_users({ name: role.name, count: userCount })
+								: m.role_delete_no_users_confirm({ name: role.name })}
 					</DialogDescription>
 				</DialogHeader>
 
 				{!checkingUsers && hasUsers && (
 					<div className="space-y-2">
-						<Label htmlFor="new-role-select">Novo perfil para os usuários</Label>
-						<Select value={newRoleId} onValueChange={setNewRoleId}>
-							<SelectTrigger id="new-role-select">
-								<SelectValue placeholder="Selecione um perfil..." />
+				<Label htmlFor="new-role-select">{m.role_delete_new_role_label()}</Label>
+				<Select value={newRoleId} onValueChange={setNewRoleId}>
+					<SelectTrigger id="new-role-select">
+						<SelectValue placeholder={m.role_delete_new_role_placeholder()} />
 							</SelectTrigger>
 							<SelectContent>
 								{otherRoles.map((r) => (
@@ -107,7 +108,7 @@ export function RoleDeleteDialog({ open, onOpenChange, role }: RoleDeleteDialogP
 
 				<DialogFooter className="gap-2">
 					<Button variant="outline" onClick={handleClose} disabled={deleteMutation.isPending}>
-						Cancelar
+						{m.common_cancel()}
 					</Button>
 					<Button
 						variant="destructive"
@@ -115,8 +116,8 @@ export function RoleDeleteDialog({ open, onOpenChange, role }: RoleDeleteDialogP
 						disabled={deleteMutation.isPending || checkingUsers || (hasUsers && !newRoleId)}
 					>
 						{deleteMutation.isPending
-							? hasUsers ? 'Reatribuindo...' : 'Excluindo...'
-							: hasUsers ? 'Reatribuir e excluir' : 'Excluir'}
+							? hasUsers ? m.role_delete_reassigning() : m.role_delete_deleting()
+							: hasUsers ? m.role_delete_reassign_btn() : m.common_delete()}
 					</Button>
 				</DialogFooter>
 			</DialogContent>

@@ -26,6 +26,8 @@ import {
 	TableHeader,
 	TableRow,
 } from '@/components/ui/table'
+import { m } from '@/paraglide/messages'
+import { getLocale } from '@/paraglide/runtime'
 
 export const Route = createFileRoute('/_authenticated/settings')({
 	component: SettingsPage,
@@ -56,7 +58,7 @@ function SettingsPage() {
 		mutationFn: (sessionId: string) => revokeSession(sessionId),
 		onSuccess: () => {
 			queryClient.invalidateQueries({ queryKey: ['sessions', userId] })
-			toast.success('Sessão revogada.')
+			toast.success(m.settings_sessions_toast_revoked())
 		},
 		onError: (err: Error) => toast.error(err.message),
 	})
@@ -65,7 +67,7 @@ function SettingsPage() {
 		mutationFn: ({ old_password, new_password }: { old_password: string; new_password: string; confirm_password: string }) =>
 			changeMyPassword(old_password, new_password),
 		onSuccess: () => {
-			toast.success('Senha alterada com sucesso.')
+			toast.success(m.settings_password_toast_success())
 			passwordForm.reset()
 		},
 		onError: (err: Error) => toast.error(err.message),
@@ -92,7 +94,7 @@ function SettingsPage() {
 
 	return (
 		<div className="space-y-6">
-			<h1 className="text-2xl font-semibold">Configurações</h1>
+			<h1 className="text-2xl font-semibold">{m.settings_title()}</h1>
 
 			{/* Row 1: Profile + Change Password side by side */}
 			<div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
@@ -100,40 +102,40 @@ function SettingsPage() {
 				{/* Profile Info */}
 				<Card className="flex flex-col">
 					<CardHeader className="flex flex-row items-center justify-between pb-2">
-						<CardTitle>Perfil</CardTitle>
+						<CardTitle>{m.settings_profile_title()}</CardTitle>
 						{canEdit && user && (
 							<Button variant="outline" size="sm" onClick={() => setProfileDialogOpen(true)}>
-								Editar
+								{m.common_edit()}
 							</Button>
 						)}
 					</CardHeader>
 					<CardContent className="flex-1">
 						{user ? (
 							<dl className="grid grid-cols-[auto_1fr] gap-x-6 gap-y-3 text-sm">
-								<dt className="text-muted-foreground self-center">Nome</dt>
+								<dt className="text-muted-foreground self-center">{m.settings_profile_name_label()}</dt>
 								<dd className="font-medium">{user.first_name} {user.last_name}</dd>
 
-								<dt className="text-muted-foreground self-center">Email</dt>
+								<dt className="text-muted-foreground self-center">{m.settings_profile_email_label()}</dt>
 								<dd className="font-medium break-all">{user.email}</dd>
 
-								<dt className="text-muted-foreground self-center">Papel</dt>
+								<dt className="text-muted-foreground self-center">{m.settings_profile_role_label()}</dt>
 								<dd><Badge variant="secondary">{user.role?.name ?? user.role_id}</Badge></dd>
 
-								<dt className="text-muted-foreground self-center">Status</dt>
+								<dt className="text-muted-foreground self-center">{m.settings_profile_status_label()}</dt>
 								<dd>
 									{user.is_active
-										? <Badge variant="default">Ativo</Badge>
-										: <Badge variant="destructive">Inativo</Badge>}
+										? <Badge variant="default">{m.common_active()}</Badge>
+										: <Badge variant="destructive">{m.common_inactive()}</Badge>}
 								</dd>
 
-								<dt className="text-muted-foreground self-center">Membro desde</dt>
-								<dd>{new Date(user.created_at).toLocaleDateString('pt-BR')}</dd>
+								<dt className="text-muted-foreground self-center">{m.settings_profile_member_since_label()}</dt>
+								<dd>{new Date(user.created_at).toLocaleDateString(getLocale())}</dd>
 
-								<dt className="text-muted-foreground self-center">Sessões ativas</dt>
+								<dt className="text-muted-foreground self-center">{m.settings_profile_active_sessions_label()}</dt>
 								<dd className="font-medium">{sessions.filter((s) => !s.revoked).length}</dd>
 							</dl>
 						) : (
-							<p className="text-sm text-muted-foreground">Carregando...</p>
+							<p className="text-sm text-muted-foreground">{m.common_loading()}</p>
 						)}
 					</CardContent>
 				</Card>
@@ -141,7 +143,7 @@ function SettingsPage() {
 				{/* Change Password */}
 				<Card className="flex flex-col">
 					<CardHeader className="pb-2">
-						<CardTitle>Alterar Senha</CardTitle>
+						<CardTitle>{m.settings_password_title()}</CardTitle>
 					</CardHeader>
 					<CardContent className="flex-1">
 						<form
@@ -153,16 +155,16 @@ function SettingsPage() {
 							className="space-y-4"
 						>
 							<passwordForm.AppField name="old_password">
-								{(field) => <field.TextField label="Senha atual" type="password" />}
-							</passwordForm.AppField>
-							<passwordForm.AppField name="new_password">
-								{(field) => <field.TextField label="Nova senha" type="password" />}
-							</passwordForm.AppField>
-							<passwordForm.AppField name="confirm_password">
-								{(field) => <field.TextField label="Confirmar nova senha" type="password" />}
-							</passwordForm.AppField>
-							<passwordForm.AppForm>
-								<passwordForm.SubmitButton label="Alterar Senha" className="w-auto" />
+							{(field) => <field.TextField label={m.settings_password_current()} type="password" />}
+						</passwordForm.AppField>
+						<passwordForm.AppField name="new_password">
+							{(field) => <field.TextField label={m.settings_password_new()} type="password" />}
+						</passwordForm.AppField>
+						<passwordForm.AppField name="confirm_password">
+							{(field) => <field.TextField label={m.settings_password_confirm()} type="password" />}
+						</passwordForm.AppField>
+						<passwordForm.AppForm>
+							<passwordForm.SubmitButton label={m.settings_password_submit()} className="w-auto" />
 							</passwordForm.AppForm>
 						</form>
 					</CardContent>
@@ -172,29 +174,29 @@ function SettingsPage() {
 			{/* Row 2: Active Sessions — full width */}
 			<Card>
 				<CardHeader className="flex flex-row items-center justify-between">
-					<CardTitle>Sessões Ativas</CardTitle>
+					<CardTitle>{m.settings_sessions_title()}</CardTitle>
 					<Button
 						variant="destructive"
 						size="sm"
 						onClick={() => revokeAllMutation.mutate()}
 						disabled={revokeAllMutation.isPending || sessions.length === 0}
 					>
-						Revogar Todas
+						{m.settings_sessions_revoke_all()}
 					</Button>
 				</CardHeader>
 				<CardContent>
 					{sessionsLoading ? (
-						<p className="text-sm text-muted-foreground">Carregando...</p>
+						<p className="text-sm text-muted-foreground">{m.common_loading()}</p>
 					) : sessions.length === 0 ? (
-						<p className="text-sm text-muted-foreground">Nenhuma sessão ativa.</p>
+						<p className="text-sm text-muted-foreground">{m.settings_sessions_empty()}</p>
 					) : (
 						<Table>
 							<TableHeader>
 								<TableRow>
 									<TableHead>ID</TableHead>
-									<TableHead>Criada em</TableHead>
-									<TableHead>Expira em</TableHead>
-									<TableHead>Status</TableHead>
+										<TableHead>{m.settings_sessions_col_created_at()}</TableHead>
+										<TableHead>{m.settings_sessions_col_expires_at()}</TableHead>
+										<TableHead>{m.common_status()}</TableHead>
 									<TableHead />
 								</TableRow>
 							</TableHeader>
@@ -203,26 +205,26 @@ function SettingsPage() {
 									<TableRow key={session.id}>
 										<TableCell className="font-mono text-xs">{session.id.slice(0, 8)}…</TableCell>
 										<TableCell className="text-xs">
-											{new Date(session.created_at).toLocaleString('pt-BR')}
-										</TableCell>
-										<TableCell className="text-xs">
-											{new Date(session.expires_at).toLocaleString('pt-BR')}
+										{new Date(session.created_at).toLocaleString(getLocale())}
+									</TableCell>
+									<TableCell className="text-xs">
+										{new Date(session.expires_at).toLocaleString(getLocale())}
 										</TableCell>
 										<TableCell>
 											{session.revoked ? (
-												<Badge variant="secondary">Revogada</Badge>
-											) : (
-												<Badge variant="default">Ativa</Badge>
-											)}
-										</TableCell>
-										<TableCell className="text-right">
-											<Button
-												variant="ghost"
-												size="sm"
-												onClick={() => revokeMutation.mutate(session.id)}
-												disabled={session.revoked || revokeMutation.isPending}
-											>
-												Revogar
+											<Badge variant="secondary">{m.settings_sessions_status_revoked()}</Badge>
+										) : (
+											<Badge variant="default">{m.settings_sessions_status_active()}</Badge>
+										)}
+									</TableCell>
+									<TableCell className="text-right">
+										<Button
+											variant="ghost"
+											size="sm"
+											onClick={() => revokeMutation.mutate(session.id)}
+											disabled={session.revoked || revokeMutation.isPending}
+										>
+											{m.common_revoke()}
 											</Button>
 										</TableCell>
 									</TableRow>

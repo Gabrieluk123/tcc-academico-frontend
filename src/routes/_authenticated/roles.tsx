@@ -15,6 +15,8 @@ import { RoleFormDialog } from '@/components/roles/RoleFormDialog'
 import { RolePermissionsDialog } from '@/components/roles/RolePermissionsDialog'
 import { RoleDeleteDialog } from '@/components/roles/RoleDeleteDialog'
 import { usePermission } from '@/hooks/use-permission'
+import { m } from '@/paraglide/messages'
+import { getLocale } from '@/paraglide/runtime'
 import { Button } from '@/components/ui/button'
 import {
 	Table,
@@ -50,21 +52,21 @@ function RolesPage() {
 	const columns: ColumnDef<Role>[] = [
 		{
 			accessorKey: 'name',
-			header: 'Nome',
+			header: () => m.common_name(),
 		},
 		{
 			accessorKey: 'description',
-			header: 'Descrição',
+			header: () => m.common_description(),
 		},
 		{
 			id: 'created_at',
-			header: 'Criado em',
+			header: () => m.roles_col_created_at(),
 			cell: ({ row }) =>
-				new Date(row.original.created_at).toLocaleDateString('pt-BR'),
+				new Date(row.original.created_at).toLocaleDateString(getLocale()),
 		},
 		{
 			id: 'actions',
-			header: 'Ações',
+			header: () => m.common_actions(),
 			cell: ({ row }) => (
 				<div className="flex items-center gap-1">
 					{canAssign && (
@@ -73,7 +75,7 @@ function RolesPage() {
 							size="sm"
 							onClick={() => { setPermissionsRole(row.original); setPermissionsDialogOpen(true) }}
 						>
-							Permissões
+							{m.roles_btn_permissions()}
 						</Button>
 					)}
 					{canUpdate && (
@@ -82,7 +84,7 @@ function RolesPage() {
 							size="sm"
 							onClick={() => { setEditingRole(row.original); setFormDialogOpen(true) }}
 						>
-							Editar
+							{m.common_edit()}
 						</Button>
 					)}
 					{canDelete && (
@@ -91,7 +93,7 @@ function RolesPage() {
 							size="sm"
 							onClick={() => { setDeletingRole(row.original); setDeleteDialogOpen(true) }}
 						>
-							Excluir
+							{m.common_delete()}
 						</Button>
 					)}
 				</div>
@@ -110,10 +112,10 @@ function RolesPage() {
 	return (
 		<div className="space-y-4">
 			<div className="flex items-center justify-between">
-				<h1 className="text-2xl font-semibold">Papéis</h1>
+				<h1 className="text-2xl font-semibold">{m.roles_title()}</h1>
 				{canCreate && (
 					<Button onClick={() => { setEditingRole(undefined); setFormDialogOpen(true) }}>
-						Novo Papel
+						{m.roles_new()}
 					</Button>
 				)}
 			</div>
@@ -137,13 +139,13 @@ function RolesPage() {
 						{isLoading ? (
 							<TableRow>
 								<TableCell colSpan={columns.length} className="text-center py-8 text-muted-foreground">
-									Carregando...
-								</TableCell>
-							</TableRow>
-						) : table.getRowModel().rows.length === 0 ? (
-							<TableRow>
-								<TableCell colSpan={columns.length} className="text-center py-8 text-muted-foreground">
-									Nenhum papel encontrado.
+								{m.common_loading()}
+							</TableCell>
+						</TableRow>
+					) : table.getRowModel().rows.length === 0 ? (
+						<TableRow>
+							<TableCell colSpan={columns.length} className="text-center py-8 text-muted-foreground">
+								{m.roles_empty()}
 								</TableCell>
 							</TableRow>
 						) : (
@@ -169,10 +171,10 @@ function RolesPage() {
 						onClick={() => table.previousPage()}
 						disabled={!table.getCanPreviousPage()}
 					>
-						Anterior
+						{m.common_previous()}
 					</Button>
 					<span className="text-sm text-muted-foreground">
-						Página {table.getState().pagination.pageIndex + 1} de {table.getPageCount()}
+						{m.roles_pagination({ current: table.getState().pagination.pageIndex + 1, total: table.getPageCount() })}
 					</span>
 					<Button
 						variant="outline"
@@ -180,7 +182,7 @@ function RolesPage() {
 						onClick={() => table.nextPage()}
 						disabled={!table.getCanNextPage()}
 					>
-						Próximo
+						{m.common_next()}
 					</Button>
 				</div>
 			)}

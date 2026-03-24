@@ -15,6 +15,7 @@ import { UserFormDialog } from '@/components/users/UserFormDialog'
 import { UserSessionsSheet } from '@/components/users/UserSessionsSheet'
 import { ConfirmDialog } from '@/components/shared/ConfirmDialog'
 import { usePermission } from '@/hooks/use-permission'
+import { m } from '@/paraglide/messages'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import {
@@ -89,7 +90,7 @@ function UsersPage() {
 			updateUser(id, { is_active }),
 		onSuccess: () => {
 			queryClient.invalidateQueries({ queryKey: ['users'] })
-			toast.success('Status do usuário atualizado.')
+			toast.success(m.users_toast_status_updated())
 		},
 		onError: (err: Error) => toast.error(err.message),
 	})
@@ -97,33 +98,33 @@ function UsersPage() {
 	const columns: ColumnDef<User>[] = [
 		{
 			id: 'fullName',
-			header: 'Nome Completo',
+			header: () => m.users_col_full_name(),
 			cell: ({ row }) => `${row.original.first_name} ${row.original.last_name}`,
 		},
 		{
 			accessorKey: 'email',
-			header: 'Email',
+			header: () => m.common_email(),
 		},
 		{
 			id: 'role',
-			header: 'Papel',
+			header: () => m.common_role(),
 			cell: ({ row }) => (
 				<Badge variant="outline">{row.original.role?.name ?? row.original.role_id}</Badge>
 			),
 		},
 		{
 			id: 'status',
-			header: 'Status',
+			header: () => m.common_status(),
 			cell: ({ row }) =>
 				row.original.is_active ? (
-					<Badge variant="default">Ativo</Badge>
+					<Badge variant="default">{m.common_active()}</Badge>
 				) : (
-					<Badge variant="secondary">Inativo</Badge>
+					<Badge variant="secondary">{m.common_inactive()}</Badge>
 				),
 		},
 		{
 			id: 'actions',
-			header: 'Ações',
+			header: () => m.common_actions(),
 			cell: ({ row }) => (
 				<div className="flex items-center gap-1">
 					{canUpdate && (
@@ -132,7 +133,7 @@ function UsersPage() {
 							size="sm"
 							onClick={() => { setEditingUser(row.original); setFormDialogOpen(true) }}
 						>
-							Editar
+							{m.common_edit()}
 						</Button>
 					)}
 					<Button
@@ -140,7 +141,7 @@ function UsersPage() {
 						size="sm"
 						onClick={() => { setSessionsUser(row.original); setSessionsSheetOpen(true) }}
 					>
-						Sessões
+						{m.users_btn_sessions()}
 					</Button>
 					{canUpdate && (
 						<Button
@@ -148,7 +149,7 @@ function UsersPage() {
 							size="sm"
 							onClick={() => { setConfirmUser(row.original); setConfirmOpen(true) }}
 						>
-							{row.original.is_active ? 'Desativar' : 'Ativar'}
+							{row.original.is_active ? m.users_btn_deactivate() : m.users_btn_activate()}
 						</Button>
 					)}
 				</div>
@@ -173,17 +174,17 @@ function UsersPage() {
 	return (
 		<div className="space-y-4">
 			<div className="flex items-center justify-between">
-				<h1 className="text-2xl font-semibold">Usuários</h1>
+				<h1 className="text-2xl font-semibold">{m.users_title()}</h1>
 				{canCreate && (
 					<Button onClick={() => { setEditingUser(undefined); setFormDialogOpen(true) }}>
-						Novo Usuário
+						{m.users_new()}
 					</Button>
 				)}
 			</div>
 
 			<div className="flex items-center gap-3">
 				<Input
-					placeholder="Filtrar por email..."
+					placeholder={m.users_filter_email_placeholder()}
 					value={emailFilter}
 					onChange={(e) => setEmailFilter(e.target.value)}
 					className="max-w-xs"
@@ -199,9 +200,9 @@ function UsersPage() {
 						<SelectValue />
 					</SelectTrigger>
 					<SelectContent>
-						<SelectItem value="all">Todos</SelectItem>
-						<SelectItem value="active">Ativos</SelectItem>
-						<SelectItem value="inactive">Inativos</SelectItem>
+						<SelectItem value="all">{m.users_filter_all()}</SelectItem>
+						<SelectItem value="active">{m.users_filter_active()}</SelectItem>
+						<SelectItem value="inactive">{m.users_filter_inactive()}</SelectItem>
 					</SelectContent>
 				</Select>
 			</div>
@@ -225,13 +226,13 @@ function UsersPage() {
 						{isLoading ? (
 							<TableRow>
 								<TableCell colSpan={columns.length} className="text-center py-8 text-muted-foreground">
-									Carregando...
-								</TableCell>
-							</TableRow>
-						) : table.getRowModel().rows.length === 0 ? (
-							<TableRow>
-								<TableCell colSpan={columns.length} className="text-center py-8 text-muted-foreground">
-									Nenhum usuário encontrado.
+								{m.common_loading()}
+							</TableCell>
+						</TableRow>
+					) : table.getRowModel().rows.length === 0 ? (
+						<TableRow>
+							<TableCell colSpan={columns.length} className="text-center py-8 text-muted-foreground">
+								{m.users_empty()}
 								</TableCell>
 							</TableRow>
 						) : (
@@ -252,8 +253,8 @@ function UsersPage() {
 			<div className="flex items-center justify-between text-sm text-muted-foreground">
 				<span>
 					{total === 0
-						? 'Nenhum resultado'
-						: `Mostrando ${pageStart}–${pageEnd} de ${total} usuários`}
+					? m.users_no_results()
+					: m.users_showing({ start: pageStart, end: pageEnd, total })}
 				</span>
 				<div className="flex gap-2">
 					<Button
@@ -262,7 +263,7 @@ function UsersPage() {
 						onClick={() => table.previousPage()}
 						disabled={!table.getCanPreviousPage()}
 					>
-						Anterior
+						{m.common_previous()}
 					</Button>
 					<Button
 						variant="outline"
@@ -270,7 +271,7 @@ function UsersPage() {
 						onClick={() => table.nextPage()}
 						disabled={!table.getCanNextPage()}
 					>
-						Próximo
+						{m.common_next()}
 					</Button>
 				</div>
 			</div>
@@ -290,8 +291,10 @@ function UsersPage() {
 			<ConfirmDialog
 				open={confirmOpen}
 				onOpenChange={setConfirmOpen}
-				title={confirmUser?.is_active ? 'Desativar usuário' : 'Ativar usuário'}
-				description={`Tem certeza que deseja ${confirmUser?.is_active ? 'desativar' : 'ativar'} ${confirmUser?.first_name} ${confirmUser?.last_name}?`}
+				title={confirmUser?.is_active ? m.users_confirm_deactivate_title() : m.users_confirm_activate_title()}
+				description={confirmUser?.is_active
+					? m.users_confirm_deactivate_desc({ name: `${confirmUser?.first_name} ${confirmUser?.last_name}` })
+					: m.users_confirm_activate_desc({ name: `${confirmUser?.first_name} ${confirmUser?.last_name}` })}
 				loading={toggleActiveMutation.isPending}
 				onConfirm={() => {
 					if (confirmUser) {

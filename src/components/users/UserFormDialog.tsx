@@ -1,6 +1,7 @@
 import { useEffect } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
+import { m } from '@/paraglide/messages'
 
 import type { User, CreateUserRequest, UpdateUserRequest } from '@/types/api'
 import { createUserSchema } from '@/types/api'
@@ -60,7 +61,7 @@ export function UserFormDialog({
 			if (user) {
 				queryClient.invalidateQueries({ queryKey: ['user', user.id] })
 			}
-			toast.success(isEdit ? 'Usuário atualizado.' : 'Usuário criado.')
+			toast.success(isEdit ? m.user_form_toast_updated() : m.user_form_toast_created())
 			onOpenChange(false)
 		},
 		onError: (err: Error) => toast.error(err.message),
@@ -102,7 +103,7 @@ export function UserFormDialog({
 		<Dialog open={open} onOpenChange={onOpenChange}>
 			<DialogContent className="sm:max-w-md">
 				<DialogHeader>
-					<DialogTitle>{isEdit ? 'Editar Usuário' : 'Novo Usuário'}</DialogTitle>
+					<DialogTitle>{isEdit ? m.user_form_edit_title() : m.user_form_create_title()}</DialogTitle>
 				</DialogHeader>
 				<form
 					onSubmit={(e) => {
@@ -113,20 +114,20 @@ export function UserFormDialog({
 					className="space-y-4"
 				>
 					<form.AppField name="first_name">
-						{(field) => <field.TextField label="Nome" />}
+						{(field) => <field.TextField label={m.user_form_first_name()} />}
 					</form.AppField>
 
 					<form.AppField name="last_name">
-						{(field) => <field.TextField label="Sobrenome" />}
+						{(field) => <field.TextField label={m.user_form_last_name()} />}
 					</form.AppField>
 
 					<form.AppField name="email">
-						{(field) => <field.TextField label="Email" type="email" />}
+						{(field) => <field.TextField label={m.common_email()} type="email" />}
 					</form.AppField>
 
 					{!isEdit && !hideRoleAndPassword && (
 						<form.AppField name="password">
-							{(field) => <field.TextField label="Senha" type="password" />}
+							{(field) => <field.TextField label={m.user_form_password()} type="password" />}
 						</form.AppField>
 					)}
 
@@ -150,10 +151,10 @@ export function UserFormDialog({
 							variant="outline"
 							onClick={() => onOpenChange(false)}
 						>
-							Cancelar
+							{m.common_cancel()}
 						</Button>
 						<form.AppForm>
-							<form.SubmitButton label={isEdit ? 'Salvar' : 'Criar'} className="w-auto" />
+							<form.SubmitButton label={isEdit ? m.common_save() : m.common_create()} className="w-auto" />
 						</form.AppForm>
 					</div>
 				</form>
@@ -177,10 +178,10 @@ function RoleSelectField({
 }) {
 	return (
 		<div className="space-y-1">
-			<Label>Papel</Label>
+			<Label>{m.common_role()}</Label>
 			<Select value={value} onValueChange={onChange}>
 				<SelectTrigger onBlur={onBlur}>
-					<SelectValue placeholder="Selecione um papel..." />
+					<SelectValue placeholder={m.user_form_role_placeholder()} />
 				</SelectTrigger>
 				<SelectContent>
 					{roles.map((role) => (

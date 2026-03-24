@@ -1,6 +1,8 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import type { User } from '@/types/api'
+import { m } from '@/paraglide/messages'
+import { getLocale } from '@/paraglide/runtime'
 import {
 	Sheet,
 	SheetContent,
@@ -39,7 +41,7 @@ export function UserSessionsSheet({ open, onOpenChange, user }: UserSessionsShee
 		mutationFn: (sessionId: string) => revokeSession(sessionId),
 		onSuccess: () => {
 			queryClient.invalidateQueries({ queryKey: ['sessions', userId] })
-			toast.success('Sessão revogada.')
+			toast.success(m.settings_sessions_toast_revoked())
 		},
 		onError: (err: Error) => toast.error(err.message),
 	})
@@ -48,7 +50,7 @@ export function UserSessionsSheet({ open, onOpenChange, user }: UserSessionsShee
 		mutationFn: () => deleteAllUserSessions(userId),
 		onSuccess: () => {
 			queryClient.invalidateQueries({ queryKey: ['sessions', userId] })
-			toast.success('Todas as sessões revogadas.')
+			toast.success(m.sessions_all_revoked_toast())
 		},
 		onError: (err: Error) => toast.error(err.message),
 	})
@@ -60,7 +62,7 @@ export function UserSessionsSheet({ open, onOpenChange, user }: UserSessionsShee
 			<SheetContent className="w-full sm:max-w-xl overflow-y-auto">
 				<SheetHeader className="mb-4">
 					<SheetTitle>
-						Sessões de {user?.first_name} {user?.last_name}
+					{m.sessions_sheet_title({ name: `${user?.first_name} ${user?.last_name}` })}
 					</SheetTitle>
 				</SheetHeader>
 
@@ -71,21 +73,21 @@ export function UserSessionsSheet({ open, onOpenChange, user }: UserSessionsShee
 						onClick={() => revokeAllMutation.mutate()}
 						disabled={revokeAllMutation.isPending || sessions.length === 0}
 					>
-						Revogar Todas
+						{m.settings_sessions_revoke_all()}
 					</Button>
 				</div>
 
 				{isLoading ? (
-					<p className="text-muted-foreground text-sm">Carregando...</p>
+					<p className="text-muted-foreground text-sm">{m.common_loading()}</p>
 				) : sessions.length === 0 ? (
-					<p className="text-muted-foreground text-sm">Nenhuma sessão ativa.</p>
+					<p className="text-muted-foreground text-sm">{m.settings_sessions_empty()}</p>
 				) : (
 					<Table>
 						<TableHeader>
 							<TableRow>
 								<TableHead>ID</TableHead>
-								<TableHead>Expira em</TableHead>
-								<TableHead>Status</TableHead>
+								<TableHead>{m.settings_sessions_col_expires_at()}</TableHead>
+								<TableHead>{m.common_status()}</TableHead>
 								<TableHead />
 							</TableRow>
 						</TableHeader>
@@ -96,13 +98,13 @@ export function UserSessionsSheet({ open, onOpenChange, user }: UserSessionsShee
 										{session.id.slice(0, 8)}...
 									</TableCell>
 									<TableCell className="text-xs">
-										{new Date(session.expires_at).toLocaleString('pt-BR')}
+										{new Date(session.expires_at).toLocaleString(getLocale())}
 									</TableCell>
 									<TableCell>
 										{session.revoked ? (
-											<Badge variant="secondary">Revogada</Badge>
+											<Badge variant="secondary">{m.settings_sessions_status_revoked()}</Badge>
 										) : (
-											<Badge variant="default">Ativa</Badge>
+											<Badge variant="default">{m.settings_sessions_status_active()}</Badge>
 										)}
 									</TableCell>
 									<TableCell>
@@ -112,7 +114,7 @@ export function UserSessionsSheet({ open, onOpenChange, user }: UserSessionsShee
 											onClick={() => revokeMutation.mutate(session.id)}
 											disabled={session.revoked || revokeMutation.isPending}
 										>
-											Revogar
+											{m.common_revoke()}
 										</Button>
 									</TableCell>
 								</TableRow>

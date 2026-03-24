@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
+import { m } from '@/paraglide/messages'
 
 import type { Role } from '@/types/api'
 import { getRoleById, assignRolePermissions } from '@/api/roles'
@@ -36,10 +37,11 @@ function groupByResource(permissions: { id: string; slug: string; description: s
 	return groups
 }
 
-const resourceLabels: Record<string, string> = {
-	user: 'Usuários',
-	role: 'Papéis',
-	permission: 'Permissões',
+function getResourceLabel(resource: string): string {
+	if (resource === 'user') return m.role_perms_resource_user()
+	if (resource === 'role') return m.role_perms_resource_role()
+	if (resource === 'permission') return m.role_perms_resource_permission()
+	return resource
 }
 
 export function RolePermissionsDialog({ open, onOpenChange, role }: RolePermissionsDialogProps) {
@@ -74,7 +76,7 @@ export function RolePermissionsDialog({ open, onOpenChange, role }: RolePermissi
 			queryClient.invalidateQueries({ queryKey: ['roles'] })
 			queryClient.invalidateQueries({ queryKey: ['roles', role.id, 'permissions'] })
 			queryClient.invalidateQueries({ queryKey: ['me'] })
-			toast.success('Permissões atualizadas.')
+			toast.success(m.role_perms_toast_updated())
 			onOpenChange(false)
 		},
 		onError: (err: Error) => toast.error(err.message),
@@ -104,12 +106,12 @@ export function RolePermissionsDialog({ open, onOpenChange, role }: RolePermissi
 				</DialogHeader>
 
 				{isLoading ? (
-					<p className="py-6 text-center text-sm text-muted-foreground">Carregando...</p>
+					<p className="py-6 text-center text-sm text-muted-foreground">{m.common_loading()}</p>
 				) : (
 					<>
 						{isAdmin && (
 							<p className="text-xs text-muted-foreground bg-muted rounded-md px-3 py-2">
-								Este papel possui acesso total (wildcard). As permissões não podem ser alteradas.
+								{m.role_perms_wildcard_info()}
 							</p>
 						)}
 						<div className="space-y-4 max-h-[60vh] overflow-y-auto pr-1">
@@ -117,7 +119,7 @@ export function RolePermissionsDialog({ open, onOpenChange, role }: RolePermissi
 								<div key={resource}>
 									{idx > 0 && <Separator className="mb-4" />}
 									<p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2">
-										{resourceLabels[resource] ?? resource}
+											{getResourceLabel(resource)}
 									</p>
 									<div className="space-y-2">
 										{perms.map((p) => (
@@ -151,18 +153,18 @@ export function RolePermissionsDialog({ open, onOpenChange, role }: RolePermissi
 				<DialogFooter className="gap-2 pt-2">
 					{!isAdmin && (
 						<span className="text-xs text-muted-foreground mr-auto self-center">
-							{selected.size} permissão(ões) selecionada(s)
+							{m.role_perms_selected_count({ count: selected.size })}
 						</span>
 					)}
 					<Button variant="outline" onClick={() => onOpenChange(false)}>
-						{isAdmin ? 'Fechar' : 'Cancelar'}
+						{isAdmin ? m.common_close() : m.common_cancel()}
 					</Button>
 					{!isAdmin && (
 						<Button
 							onClick={() => mutation.mutate(Array.from(selected))}
 							disabled={mutation.isPending || isLoading}
 						>
-							{mutation.isPending ? 'Salvando...' : 'Salvar'}
+							{mutation.isPending ? m.common_saving() : m.common_save()}
 						</Button>
 					)}
 				</DialogFooter>
