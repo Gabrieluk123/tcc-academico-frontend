@@ -1,8 +1,18 @@
 import axios from 'axios'
 import { authStore, clearAuth } from '../lib/auth-store'
 
+function getApiBaseUrl(): string {
+	if (import.meta.env['VITE_API_BASE_URL']) {
+		return import.meta.env['VITE_API_BASE_URL']
+	}
+	if (typeof window !== 'undefined') {
+		return `http://${window.location.hostname}:8080/api/v1`
+	}
+	return 'http://localhost:8080/api/v1'
+}
+
 export const client = axios.create({
-	baseURL: import.meta.env['VITE_API_BASE_URL'] ?? 'http://localhost:8080/api/v1',
+	baseURL: getApiBaseUrl(),
 })
 
 client.interceptors.request.use((config) => {

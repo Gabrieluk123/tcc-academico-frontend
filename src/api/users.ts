@@ -57,3 +57,20 @@ export async function deleteAllUserSessions(userId: string): Promise<void> {
 export async function revokeSession(sessionId: string): Promise<void> {
 	await client.delete(`/sessions/${sessionId}`)
 }
+
+export async function getMe(include?: string): Promise<User> {
+	const response = await client.get<User>('/users/me', {
+		params: include ? { include } : undefined,
+	})
+	return response.data
+}
+
+export async function changeMyPassword(
+	oldPassword: string,
+	newPassword: string,
+): Promise<void> {
+	await client.patch('/users/me/password', {
+		old_password: oldPassword,
+		new_password: newPassword,
+	})
+}

@@ -45,7 +45,7 @@ export function UserFormDialog({
 		queryFn: listRoles,
 		enabled: open && !hideRoleAndPassword,
 	})
-	const roles = rolesData ?? []
+	const roles = rolesData?.items ?? []
 
 	const mutation = useMutation({
 		mutationFn: (values: Record<string, unknown>) => {

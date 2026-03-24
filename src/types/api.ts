@@ -17,6 +17,7 @@ export const roleSchema = z.object({
 	id: z.string(),
 	name: z.string(),
 	description: z.string(),
+	permissions: z.array(permissionSchema).optional(),
 	created_at: z.string(),
 	updated_at: z.string(),
 })
@@ -67,7 +68,7 @@ export interface ListResponse<T> {
 // ---------------------------------------------------------------------------
 
 export const loginRequestSchema = z.object({
-	email: z.string().email('Email inválido'),
+	email: z.email('Email inválido'),
 	password: z.string().min(6, 'Senha deve ter pelo menos 6 caracteres'),
 })
 export type LoginRequest = z.infer<typeof loginRequestSchema>
@@ -84,7 +85,7 @@ export type LoginResponse = z.infer<typeof loginResponseSchema>
 export const createUserSchema = z.object({
 	first_name: z.string().min(1, 'Nome é obrigatório'),
 	last_name: z.string().min(1, 'Sobrenome é obrigatório'),
-	email: z.string().email('Email inválido'),
+	email: z.email('Email inválido'),
 	password: z.string().min(8, 'Senha deve ter pelo menos 8 caracteres'),
 	role_id: z.string().min(1, 'Papel é obrigatório'),
 })
@@ -124,7 +125,9 @@ export const createRoleSchema = z.object({
 })
 export type CreateRoleRequest = z.infer<typeof createRoleSchema>
 
-export const updateRoleSchema = createRoleSchema.partial()
+export const updateRoleSchema = createRoleSchema.partial().extend({
+	permission_ids: z.array(z.string()).optional(),
+})
 export type UpdateRoleRequest = z.infer<typeof updateRoleSchema>
 
 // ---------------------------------------------------------------------------
@@ -135,3 +138,19 @@ export const apiErrorSchema = z.object({
 	message: z.string(),
 })
 export type ApiError = z.infer<typeof apiErrorSchema>
+
+// ---------------------------------------------------------------------------
+// Self-service password change
+// ---------------------------------------------------------------------------
+
+export const changePasswordSchema = z
+	.object({
+		old_password: z.string().min(6, 'Senha atual deve ter pelo menos 6 caracteres'),
+		new_password: z.string().min(8, 'Nova senha deve ter pelo menos 8 caracteres'),
+		confirm_password: z.string(),
+	})
+	.refine((d) => d.new_password === d.confirm_password, {
+		message: 'As senhas não coincidem',
+		path: ['confirm_password'],
+	})
+export type ChangePasswordRequest = { old_password: string; new_password: string }

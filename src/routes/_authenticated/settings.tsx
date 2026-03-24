@@ -3,10 +3,12 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
 import { toast } from 'sonner'
 
-import { getUserById, listUserSessions, revokeSession, deleteAllUserSessions } from '@/api/users'
+import { getMe, listUserSessions, revokeSession, deleteAllUserSessions, changeMyPassword } from '@/api/users'
 import { logout } from '@/api/auth'
 import { useAuthStore, clearAuth } from '@/lib/auth-store'
 import { usePermission } from '@/hooks/use-permission'
+import { useAppForm } from '@/hooks/app-form'
+import { changePasswordSchema } from '@/types/api'
 import { UserFormDialog } from '@/components/users/UserFormDialog'
 import {
 	Card,
@@ -38,8 +40,8 @@ function SettingsPage() {
 	const canEdit = usePermission('user:update')
 
 	const { data: user } = useQuery({
-		queryKey: ['user', userId],
-		queryFn: () => getUserById(userId, 'role'),
+		queryKey: ['me'],
+		queryFn: () => getMe('role,permissions'),
 		enabled: !!userId,
 	})
 
@@ -58,6 +60,22 @@ function SettingsPage() {
 		},
 		onError: (err: Error) => toast.error(err.message),
 	})
+
+	const changePasswordMutation = useMutation({
+		mutationFn: ({ old_password, new_password }: { old_password: string; new_password: string; confirm_password: string }) =>
+			changeMyPassword(old_password, new_password),
+		onSuccess: () => {
+			toast.success('Senha alterada com sucesso.')
+			passwordForm.reset()
+		},
+		onError: (err: Error) => toast.error(err.message),
+	})
+
+	const passwordForm = useAppForm({
+		defaultValues: { old_password: '', new_password: '', confirm_password: '' },
+		validators: { onBlur: changePasswordSchema },
+		onSubmit: ({ value }) => changePasswordMutation.mutate(value),
+	})
 	const revokeAllMutation = useMutation({
 		mutationFn: () => deleteAllUserSessions(userId),
 		onSuccess: async () => {
@@ -73,60 +91,85 @@ function SettingsPage() {
 	})
 
 	return (
-		<div className="space-y-6 max-w-2xl">
+		<div className="space-y-6">
 			<h1 className="text-2xl font-semibold">Configurações</h1>
 
-			{/* Section 1: Profile Info */}
-			<Card>
-				<CardHeader>
-					<CardTitle>Perfil</CardTitle>
-				</CardHeader>
-				<CardContent className="space-y-3">
-					{user ? (
-						<>
-							<div className="grid grid-cols-2 gap-2 text-sm">
-								<span className="text-muted-foreground">Nome completo</span>
-								<span>{user.first_name} {user.last_name}</span>
-								<span className="text-muted-foreground">Email</span>
-								<span>{user.email}</span>
-								<span className="text-muted-foreground">Papel</span>
-								<span>{user.role?.name ?? user.role_id}</span>
-								<span className="text-muted-foreground">Status</span>
-								<span>
-									{user.is_active ? (
-										<Badge variant="default">Ativo</Badge>
-									) : (
-										<Badge variant="secondary">Inativo</Badge>
-									)}
-								</span>
-								<span className="text-muted-foreground">Membro desde</span>
-								<span>{new Date(user.created_at).toLocaleDateString('pt-BR')}</span>
-							</div>
-							{canEdit && (
-								<Button variant="outline" size="sm" onClick={() => setProfileDialogOpen(true)}>
-									Editar Perfil
-								</Button>
-							)}
-						</>
-					) : (
-						<p className="text-sm text-muted-foreground">Carregando...</p>
-					)}
-				</CardContent>
-			</Card>
+			{/* Row 1: Profile + Change Password side by side */}
+			<div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
 
-			{/* Section 2: Change Password */}
-			<Card>
-				<CardHeader>
-					<CardTitle>Alterar Senha</CardTitle>
-				</CardHeader>
-				<CardContent>
-					<p className="text-sm text-muted-foreground">
-						A alteração de senha não está disponível nesta versão do sistema.
-					</p>
-				</CardContent>
-			</Card>
+				{/* Profile Info */}
+				<Card className="flex flex-col">
+					<CardHeader className="flex flex-row items-center justify-between pb-2">
+						<CardTitle>Perfil</CardTitle>
+						{canEdit && user && (
+							<Button variant="outline" size="sm" onClick={() => setProfileDialogOpen(true)}>
+								Editar
+							</Button>
+						)}
+					</CardHeader>
+					<CardContent className="flex-1">
+						{user ? (
+							<dl className="grid grid-cols-[auto_1fr] gap-x-6 gap-y-3 text-sm">
+								<dt className="text-muted-foreground self-center">Nome</dt>
+								<dd className="font-medium">{user.first_name} {user.last_name}</dd>
 
-			{/* Section 3: Active Sessions */}
+								<dt className="text-muted-foreground self-center">Email</dt>
+								<dd className="font-medium break-all">{user.email}</dd>
+
+								<dt className="text-muted-foreground self-center">Papel</dt>
+								<dd><Badge variant="secondary">{user.role?.name ?? user.role_id}</Badge></dd>
+
+								<dt className="text-muted-foreground self-center">Status</dt>
+								<dd>
+									{user.is_active
+										? <Badge variant="default">Ativo</Badge>
+										: <Badge variant="destructive">Inativo</Badge>}
+								</dd>
+
+								<dt className="text-muted-foreground self-center">Membro desde</dt>
+								<dd>{new Date(user.created_at).toLocaleDateString('pt-BR')}</dd>
+
+								<dt className="text-muted-foreground self-center">Sessões ativas</dt>
+								<dd className="font-medium">{sessions.filter((s) => !s.revoked).length}</dd>
+							</dl>
+						) : (
+							<p className="text-sm text-muted-foreground">Carregando...</p>
+						)}
+					</CardContent>
+				</Card>
+
+				{/* Change Password */}
+				<Card className="flex flex-col">
+					<CardHeader className="pb-2">
+						<CardTitle>Alterar Senha</CardTitle>
+					</CardHeader>
+					<CardContent className="flex-1">
+						<form
+							onSubmit={(e) => {
+								e.preventDefault()
+								e.stopPropagation()
+								passwordForm.handleSubmit()
+							}}
+							className="space-y-4"
+						>
+							<passwordForm.AppField name="old_password">
+								{(field) => <field.TextField label="Senha atual" type="password" />}
+							</passwordForm.AppField>
+							<passwordForm.AppField name="new_password">
+								{(field) => <field.TextField label="Nova senha" type="password" />}
+							</passwordForm.AppField>
+							<passwordForm.AppField name="confirm_password">
+								{(field) => <field.TextField label="Confirmar nova senha" type="password" />}
+							</passwordForm.AppField>
+							<passwordForm.AppForm>
+								<passwordForm.SubmitButton label="Alterar Senha" className="w-auto" />
+							</passwordForm.AppForm>
+						</form>
+					</CardContent>
+				</Card>
+			</div>
+
+			{/* Row 2: Active Sessions — full width */}
 			<Card>
 				<CardHeader className="flex flex-row items-center justify-between">
 					<CardTitle>Sessões Ativas</CardTitle>
@@ -136,7 +179,7 @@ function SettingsPage() {
 						onClick={() => revokeAllMutation.mutate()}
 						disabled={revokeAllMutation.isPending || sessions.length === 0}
 					>
-						Revogar Todas as Outras
+						Revogar Todas
 					</Button>
 				</CardHeader>
 				<CardContent>
@@ -158,7 +201,7 @@ function SettingsPage() {
 							<TableBody>
 								{sessions.map((session) => (
 									<TableRow key={session.id}>
-										<TableCell className="font-mono text-xs">{session.id.slice(0, 8)}...</TableCell>
+										<TableCell className="font-mono text-xs">{session.id.slice(0, 8)}…</TableCell>
 										<TableCell className="text-xs">
 											{new Date(session.created_at).toLocaleString('pt-BR')}
 										</TableCell>
@@ -172,7 +215,7 @@ function SettingsPage() {
 												<Badge variant="default">Ativa</Badge>
 											)}
 										</TableCell>
-										<TableCell>
+										<TableCell className="text-right">
 											<Button
 												variant="ghost"
 												size="sm"
@@ -196,7 +239,7 @@ function SettingsPage() {
 					onOpenChange={(open) => {
 						setProfileDialogOpen(open)
 						if (!open) {
-							queryClient.invalidateQueries({ queryKey: ['user', userId] })
+							queryClient.invalidateQueries({ queryKey: ['me'] })
 						}
 					}}
 					user={user}

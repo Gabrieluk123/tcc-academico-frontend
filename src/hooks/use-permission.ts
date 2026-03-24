@@ -1,15 +1,28 @@
+import { useQuery } from '@tanstack/react-query'
+import { getMe } from '@/api/users'
 import type { PermissionSlug } from '@/utils/permission-slugs'
 
 /**
- * Returns whether the current user has a given permission.
+ * Returns whether the authenticated user's role contains the given permission.
  *
- * NOTE: The backend (Casbin) is the real authority and will reject
- * unauthorised requests with 403. The frontend cannot currently query
- * which permissions a role has (no `GET /roles/:id?include=permissions`
- * endpoint exists), so this hook always returns `true` — it only exists
- * as an injection point for when the backend exposes that data.
+ * Uses GET /users/me?include=role,permissions so the server resolves Casbin
+ * policies in the user's own context — wildcard roles (e.g. Admin) work
+ * correctly because the server expands `*` into all known permission slugs.
+ *
+ * The server is the real authority; this only controls UI visibility.
  */
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-export function usePermission(_slug: PermissionSlug): boolean {
-	return true
+export function usePermission(slug: PermissionSlug): boolean {
+	const { data: me } = useQuery({
+		queryKey: ['me'],
+		queryFn: () => getMe('role,permissions'),
+		staleTime: 5 * 60 * 1000,
+	})
+
+	const permissions = me?.role?.permissions
+	if (!permissions) return false
+
+	// Wildcard: backend may return a single {slug:'*'} entry for unrestricted roles
+	if (permissions.some((p) => p.slug === '*')) return true
+
+	return permissions.some((p) => p.slug === slug)
 }

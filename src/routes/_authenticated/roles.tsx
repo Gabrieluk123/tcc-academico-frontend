@@ -1,5 +1,5 @@
 import { createFileRoute } from '@tanstack/react-router'
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { useQuery } from '@tanstack/react-query'
 import {
 	flexRender,
 	getCoreRowModel,
@@ -7,14 +7,13 @@ import {
 	useReactTable,
 } from '@tanstack/react-table'
 import { useState } from 'react'
-import { toast } from 'sonner'
 import type { ColumnDef } from '@tanstack/react-table'
 
 import type { Role } from '@/types/api'
-import { deleteRole } from '@/api/roles'
 import { listRoles } from '@/api/roles'
 import { RoleFormDialog } from '@/components/roles/RoleFormDialog'
-import { ConfirmDialog } from '@/components/shared/ConfirmDialog'
+import { RolePermissionsDialog } from '@/components/roles/RolePermissionsDialog'
+import { RoleDeleteDialog } from '@/components/roles/RoleDeleteDialog'
 import { usePermission } from '@/hooks/use-permission'
 import { Button } from '@/components/ui/button'
 import {
@@ -31,29 +30,21 @@ export const Route = createFileRoute('/_authenticated/roles')({
 })
 
 function RolesPage() {
-	const queryClient = useQueryClient()
 	const canCreate = usePermission('role:create')
 	const canUpdate = usePermission('role:update')
 	const canDelete = usePermission('role:delete')
 
 	const [formDialogOpen, setFormDialogOpen] = useState(false)
 	const [editingRole, setEditingRole] = useState<Role | undefined>()
-	const [confirmOpen, setConfirmOpen] = useState(false)
+	const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
 	const [deletingRole, setDeletingRole] = useState<Role | null>(null)
+	const [permissionsDialogOpen, setPermissionsDialogOpen] = useState(false)
+	const [permissionsRole, setPermissionsRole] = useState<Role | null>(null)
+	const canAssign = usePermission('permission:assign')
 
 	const { data, isLoading } = useQuery({
 		queryKey: ['roles'],
 		queryFn: listRoles,
-	})
-
-	const deleteMutation = useMutation({
-		mutationFn: (id: string) => deleteRole(id),
-		onSuccess: () => {
-			queryClient.invalidateQueries({ queryKey: ['roles'] })
-			toast.success('Papel excluído.')
-			setConfirmOpen(false)
-		},
-		onError: (err: Error) => toast.error(err.message),
 	})
 
 	const columns: ColumnDef<Role>[] = [
@@ -76,6 +67,15 @@ function RolesPage() {
 			header: 'Ações',
 			cell: ({ row }) => (
 				<div className="flex items-center gap-1">
+					{canAssign && (
+						<Button
+							variant="ghost"
+							size="sm"
+							onClick={() => { setPermissionsRole(row.original); setPermissionsDialogOpen(true) }}
+						>
+							Permissões
+						</Button>
+					)}
 					{canUpdate && (
 						<Button
 							variant="ghost"
@@ -89,7 +89,7 @@ function RolesPage() {
 						<Button
 							variant="ghost"
 							size="sm"
-							onClick={() => { setDeletingRole(row.original); setConfirmOpen(true) }}
+							onClick={() => { setDeletingRole(row.original); setDeleteDialogOpen(true) }}
 						>
 							Excluir
 						</Button>
@@ -100,7 +100,7 @@ function RolesPage() {
 	]
 
 	const table = useReactTable({
-		data: data ?? [],
+		data: data?.items ?? [],
 		columns,
 		getCoreRowModel: getCoreRowModel(),
 		getPaginationRowModel: getPaginationRowModel(),
@@ -191,18 +191,21 @@ function RolesPage() {
 				role={editingRole}
 			/>
 
-			<ConfirmDialog
-				open={confirmOpen}
-				onOpenChange={setConfirmOpen}
-				title="Excluir papel"
-				description={`Tem certeza que deseja excluir o papel "${deletingRole?.name}"? Esta ação não pode ser desfeita.`}
-				loading={deleteMutation.isPending}
-				onConfirm={() => {
-					if (deletingRole) {
-						deleteMutation.mutate(deletingRole.id)
-					}
-				}}
-			/>
+			{permissionsRole && (
+				<RolePermissionsDialog
+					open={permissionsDialogOpen}
+					onOpenChange={setPermissionsDialogOpen}
+					role={permissionsRole}
+				/>
+			)}
+
+			{deletingRole && (
+				<RoleDeleteDialog
+					open={deleteDialogOpen}
+					onOpenChange={setDeleteDialogOpen}
+					role={deletingRole}
+				/>
+			)}
 		</div>
 	)
 }

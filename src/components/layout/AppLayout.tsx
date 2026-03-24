@@ -1,9 +1,13 @@
 import { Link, useNavigate, useRouterState } from '@tanstack/react-router'
+import { useQuery } from '@tanstack/react-query'
 import { Settings, Shield, Users } from 'lucide-react'
 import { logout } from '../../api/auth'
 import { clearAuth, useAuthStore } from '../../lib/auth-store'
 import { usePermission } from '../../hooks/use-permission'
+import { getMe } from '../../api/users'
 import { Button } from '../ui/button'
+import ThemeToggle from '../ThemeToggle'
+import LocaleSwitcher from '../LocaleSwitcher'
 import {
 	Sidebar,
 	SidebarContent,
@@ -25,6 +29,17 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
 	const routerState = useRouterState()
 	const currentPath = routerState.location.pathname
 	const canReadRoles = usePermission('role:read')
+
+	const { data: me } = useQuery({
+		queryKey: ['me'],
+		queryFn: () => getMe('role,permissions'),
+		enabled: !!auth.token,
+		staleTime: 5 * 60 * 1000,
+	})
+
+	const displayName = me
+		? `${me.first_name} ${me.last_name}`.trim()
+		: (auth.userId ?? 'Usuário')
 
 	async function handleLogout() {
 		try {
@@ -74,8 +89,8 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
 
 				<SidebarFooter className="border-t p-3">
 					<div className="flex flex-col gap-2">
-						<p className="text-xs text-muted-foreground truncate px-1">
-							{auth.userId ?? 'Usuário'}
+					<p className="text-xs text-muted-foreground truncate px-1" title={me?.email}>
+						{displayName}
 						</p>
 						<Button variant="outline" size="sm" onClick={handleLogout} className="w-full">
 							Sair
@@ -87,6 +102,10 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
 			<SidebarInset>
 				<header className="flex h-12 items-center gap-2 border-b px-4">
 					<SidebarTrigger />
+					<div className="ml-auto flex items-center gap-1">
+						<LocaleSwitcher />
+						<ThemeToggle />
+					</div>
 				</header>
 				<main className="flex-1 p-6">{children}</main>
 			</SidebarInset>
