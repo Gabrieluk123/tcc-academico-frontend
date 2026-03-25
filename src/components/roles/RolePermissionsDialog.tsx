@@ -119,7 +119,7 @@ export function RolePermissionsDialog({ open, onOpenChange, role }: RolePermissi
 								<div key={resource}>
 									{idx > 0 && <Separator className="mb-4" />}
 									<p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2">
-											{getResourceLabel(resource)}
+										{getResourceLabel(resource)}
 									</p>
 									<div className="space-y-2">
 										{perms.map((p) => (
@@ -129,11 +129,13 @@ export function RolePermissionsDialog({ open, onOpenChange, role }: RolePermissi
 													checked={isAdmin || selected.has(p.id)}
 													onCheckedChange={isAdmin ? undefined : () => toggle(p.id)}
 													disabled={isAdmin}
+													className="shrink-0 mt-0.5" // shrink-0 impede o checkbox de amassar
 												/>
-												<div className="grid gap-0.5">
+												<div className="flex flex-col gap-1"> {/* Trocado de grid para flex */}
 													<Label
 														htmlFor={p.id}
-														className={isAdmin ? 'cursor-not-allowed opacity-60 font-medium text-sm leading-none' : 'cursor-pointer font-medium text-sm leading-none'}
+														// Adicionado o w-fit no final para o Label não esticar na horizontal
+														className={isAdmin ? 'cursor-not-allowed opacity-60 font-medium text-sm leading-none w-fit' : 'cursor-pointer font-medium text-sm leading-none w-fit'}
 													>
 														<Badge variant="outline" className="font-mono text-xs mr-2">
 															{p.slug}

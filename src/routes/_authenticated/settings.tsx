@@ -119,14 +119,14 @@ function SettingsPage() {
 								<dd className="font-medium break-all">{user.email}</dd>
 
 								<dt className="text-muted-foreground self-center">{m.settings_profile_role_label()}</dt>
-								<dd><Badge variant="secondary">{user.role?.name ?? user.role_id}</Badge></dd>
+                                <dd className="self-center"><Badge variant="secondary">{user.role?.name ?? user.role_id}</Badge></dd>
 
-								<dt className="text-muted-foreground self-center">{m.settings_profile_status_label()}</dt>
-								<dd>
-									{user.is_active
-										? <Badge variant="default">{m.common_active()}</Badge>
-										: <Badge variant="destructive">{m.common_inactive()}</Badge>}
-								</dd>
+                                <dt className="text-muted-foreground self-center">{m.settings_profile_status_label()}</dt>
+                                <dd className="self-center">
+                                    {user.is_active
+                                    ? <Badge variant="default">{m.common_active()}</Badge>
+                                    : <Badge variant="destructive">{m.common_inactive()}</Badge>}
+                                </dd>
 
 								<dt className="text-muted-foreground self-center">{m.settings_profile_member_since_label()}</dt>
 								<dd>{new Date(user.created_at).toLocaleDateString(getLocale())}</dd>
